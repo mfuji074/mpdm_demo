@@ -20,8 +20,17 @@ for t in tspan:
         car.log_state()
 
 plt.figure()
+plt.subplot(3,1,1)
 for i,car in enumerate(car_set):
-    plt.subplot(3,1,i+1)
     plt.plot(car.pos_list)
+
+plt.subplot(3,1,2)
+for i,car in enumerate(car_set):
+    plt.plot(car.vel_list)
+
+plt.subplot(3,1,3)
+for i,car in enumerate(car_set):
+    plt.plot(car.lane_list)
+
 
 plt.show()
