@@ -1,11 +1,15 @@
 class Car:
+    # for pid control
+    ei = 0.0
+    ed = 0.0
+
     def __init__(self, lane0, pos0_in_lane, vel0, acc0, vel_max = [1.0, 1.2], policy = 'keep_lane'):
         # state
         self.lane = lane0
         self.pos_in_lane = pos0_in_lane
         self.vel = vel0
-        self.vel_max = vel_max # 各レーンでの最高速度
         self.acc = acc0
+        self.vel_max = vel_max # 各レーンでの最高速度
 
         # policy
         self.policy = policy
@@ -23,6 +27,7 @@ class Car:
 
 
     def measure(self, Car_list):
+        # reset measurement
         self.lane_m = []
         self.dst_m = []
         self.rvel_m = []
@@ -43,7 +48,7 @@ class Car:
             self.rvel_m.append(rvel)
 
 
-    def __exec_policy(self, dt):
+    def exec_policy(self,dt):
 
         # 同じレーンにいる車のインデックス取得
         lane_idx = [i for i, lane in enumerate(self.lane_m) if lane == 1]
@@ -54,16 +59,22 @@ class Car:
         except (ValueError, TypeError):
             is_car_in_front = 0
 
-        dst_threshold = 3
+        dst_threshold = 10
 
         # keep lane
         if self.policy == 'keep_lane':
             if is_car_in_front:
                 # 車間距離維持
-                self.acc += Kp * (e-e1) + Ki * e + Kd * ((e-e1) - (e1-e2))
+                Kp = -1e-5
+                Kd = 0
+                e = dst_threshold - dst
+                self.acc = Kp * e + Kd * e/dt
             else:
                 # 最高速度維持
-                self.acc += Kp * (e-e1) + Ki * e + Kd * ((e-e1) - (e1-e2))
+                Kp = 1e-1
+                Kd = 0
+                e =  self.vel_max[self.lane] - self.vel
+                self.acc = Kp * e + Kd * e/dt
 
         # change lane
         elif self.policy == 'change_lane':
@@ -76,9 +87,6 @@ class Car:
 
 
     def update(self, dt):
-        # ポリシー実行
-        self.__exec_policy(dt)
-
         # 更新
         self.pos_in_lane += self.vel*dt
         self.vel += self.acc*dt
