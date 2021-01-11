@@ -1,46 +1,61 @@
 import copy
+import numpy as np
 
 class MPDM:
     def __init__(self, dt, th):
         self.dt = dt # time step
         self.th = th # horizon
 
-    def __compute_score(self, Cars):
+    def __compute_score(self, Car):
+        score = 0.0
 
-        return
+        # 最終位置が大きいほどスコアアップ
+        score += Car.pos_in_lane
+
+        # 走行車線にいるとスコアアップ
+        if Car.lane == 0:
+            score *= 2
+
+        return score
 
 
     def simulate_forward(self, Cars):
-        cost = 0
+        score = 0
+        tspan = np.arange(self.dt, self.th, self.dt)
 
-        for t in range(self.dt, self.th, self.dt):
+        for i in range(len(tspan)):
             # 全車更新
             for car in Cars:
+                car.measure(Cars)
+                car.exec_policy(self.dt)
+
+            for car in Cars:
                 car.update(self.dt)
+                car.log_state()
 
-            # コスト計算
-            cost += __compute_score(Cars[0])
+        # スコア計算
+        score = self.__compute_score(Cars[0])
 
-        return cost
+        return score
 
 
     def optimize(self, Cars):
-        cost = []
+        score = []
 
         # コスト計算用に別オブジェクトにする
-        Cars_ = copy.deepcopy(Cars)
+        Cars_tmp = copy.deepcopy(Cars)
 
         # TODO : 抽象化して、for policy in policy_setみたいな感じにする
-        Cars_[0].policy = 'keep_lane'
-        cost.append(self.simulate_forward(Cars_))
+        Cars_tmp[0].policy = 'keep_lane'
+        score.append(self.simulate_forward(Cars_tmp))
 
         # コスト計算用に別オブジェクトにする
-        Cars_ = copy.deepcopy(Cars)
+        Cars_tmp = copy.deepcopy(Cars)
 
-        Cars_[0].policy = 'change_lane'
-        cost.append(self.simulate_forward(Cars_))
+        Cars_tmp[0].policy = 'change_lane'
+        score.append(self.simulate_forward(Cars_tmp))
 
-        if cost[0] > cost[1]:
+        if score[0] > score[1]:
             return 'keep_lane'
         else:
             return 'change_lane'
