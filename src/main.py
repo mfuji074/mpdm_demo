@@ -6,29 +6,29 @@ from car import Car
 from mpdm import MPDM
 
 # simulation period
-tf = 5000
+tf = 20000
 dt = 0.1
 tspan = np.arange(dt, tf, dt)
 
 
 # car
-car0 = Car(0, 20.0,  0.8, 0.0, [1.0, 1.2]) # lane, pos, vel, acc, vel_max(各レーンでの最高速度)
-car1 = Car(0, 100.0, 0.7, 0.0, [0.8, 1.0])
-car2 = Car(1, 0.0,  1.0, 0.0, [0.9, 1.1])
+car0 = Car(0, 0.0,  0.8, 0.0, [1.0, 1.2], 'keep_lane') # lane, pos, vel, acc, vel_max(各レーンでの最高速度)
+car1 = Car(0, 300.0, 0.7, 0.0, [0.8, 1.0], 'keep_lane')
+#car2 = Car(1, 0.0,  1.0, 0.0, [0.9, 1.1], 'keep_lane')
 
-cars = [car0, car1, car2]
+cars = [car0, car1]
 
 # MPDM
-th = tf/5.0 # horizon
+th = 2000 # horizon
 mpdm_car0 = MPDM(dt, th)
-interval_mpdm = 3
+interval_mpdm = 1000
 
 
 # simulation
 for i in range(len(tspan)):
 
-#    if (i % interval_mpdm) == 0:
-#            car[0].policy = mpdm_car0.optimize(cars)
+    if (i % interval_mpdm) == 0:
+            cars[0].policy = mpdm_car0.optimize(cars)
 
     for car in cars:
         # measurement
@@ -62,8 +62,5 @@ for i,car in enumerate(cars):
 plt.subplot(4,1,4)
 for i,car in enumerate(cars):
     plt.plot(tspan, car.lane_list)
-
-plt.figure()
-plt.plot(tspan, cars[1].pos_list - cars[0].pos_list)
 
 plt.show()
