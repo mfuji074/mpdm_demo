@@ -86,15 +86,15 @@ class Car:
         # change lane
         elif self.policy == 'change_lane':
             if self.lane == 0:
-                self.lane == 1
-                self.policy == 'keep_lane'
+                self.lane = 1
+                self.policy = 'keep_lane'
             else:
-                self.lane == 0
-                self.policy == 'keep_lane'
+                self.lane = 0
+                self.policy = 'keep_lane'
 
 
     def update(self, dt):
-        # 更新
+        # 状態量更新
         self.pos_in_lane += self.vel*dt
         self.vel += self.acc*dt
 
