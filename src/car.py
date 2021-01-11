@@ -1,7 +1,7 @@
 class Car:
-    # for pid control
-    ei = 0.0
-    ed = 0.0
+
+    # 車間距離
+    dst_threshold = 50
 
     def __init__(self, lane0, pos0_in_lane, vel0, acc0, vel_max = [1.0, 1.2], policy = 'keep_lane'):
         # state
@@ -13,6 +13,10 @@ class Car:
 
         # policy
         self.policy = policy
+
+        # for pid control
+        self.ei = 0.0
+        self.ed = 0.0
 
         # measurement
         self.lane_m = [] # 他車とレーンが一致しているか否か(bool)
@@ -59,22 +63,25 @@ class Car:
         except (ValueError, TypeError):
             is_car_in_front = 0
 
-        dst_threshold = 10
 
         # keep lane
         if self.policy == 'keep_lane':
             if is_car_in_front:
                 # 車間距離維持
-                Kp = -1e-5
-                Kd = 0
-                e = dst_threshold - dst
-                self.acc = Kp * e + Kd * e/dt
+                Kp = 1e-7
+                Kd = 1e-3
+                e = dst - Car.dst_threshold
+                self.acc = Kp * e + Kd * (e - self.ed)/dt
+
+                self.ed = e
             else:
                 # 最高速度維持
                 Kp = 1e-1
-                Kd = 0
+                Kd = 1e-2
                 e =  self.vel_max[self.lane] - self.vel
-                self.acc = Kp * e + Kd * e/dt
+                self.acc = Kp * e + Kd * (e - self.ed)/dt
+
+                self.ed = e
 
         # change lane
         elif self.policy == 'change_lane':
