@@ -14,7 +14,7 @@ class MPDM:
 
         # 走行車線にいるとスコアアップ
         if Car.lane == 0:
-            score *= 2
+            score *= 1.3
 
         return score
 

@@ -21,7 +21,7 @@ cars = [car0, car1]
 # MPDM
 th = 2000 # horizon
 mpdm_car0 = MPDM(dt, th)
-interval_mpdm = 1000
+interval_mpdm = 10000
 
 
 # simulation
