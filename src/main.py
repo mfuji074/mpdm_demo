@@ -6,14 +6,14 @@ from car import Car
 from mpdm import MPDM
 
 # simulation period
-tf = 20000
+tf = 5000
 dt = 0.1
 tspan = np.arange(dt, tf, dt)
 
 
 # car
-car0 = Car(0, 0.0,  0.8, 0.0, [1.0, 1.2], 'keep_lane') # lane, pos, vel, acc, vel_max(各レーンでの最高速度)
-car1 = Car(0, 300.0, 0.7, 0.0, [0.8, 1.0], 'keep_lane')
+car0 = Car(0, 0.0,  1.0, 0.0, [1.0, 1.2], 'keep_lane',) # lane, pos, vel, acc, vel_max(各レーンでの最高速度)
+car1 = Car(0, 400.0, 0.8, 0.0, [0.8, 1.0], 'keep_lane', False)
 #car2 = Car(1, 0.0,  1.0, 0.0, [0.9, 1.1], 'keep_lane')
 
 cars = [car0, car1]
