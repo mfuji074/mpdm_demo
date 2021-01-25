@@ -78,6 +78,13 @@ class Car:
                 self.acc = Kp * e + Kd * (e - self.ed_kd)/dt
                 self.ed_kd = e
 
+                # 加速度制約
+                if self.acc > 2:
+                    self.acc = 2
+                elif self.acc < -2:
+                    self.acc = -2
+
+
 
             else:
                 # 最高速度維持
