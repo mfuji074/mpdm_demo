@@ -72,9 +72,13 @@ class Car:
         if self.policy == 'keep_lane':
             if is_car_in_front and self.is_closing:
                 # 車間距離維持
-                self.acc = 0.3
-
+                Kp = 1e-6
+                Kd = 1e-2
+                e =  dst - Car.dst_threshold
+                self.acc = Kp * e + Kd * (e - self.ed_kd)/dt
                 self.ed_kd = e
+
+
             else:
                 # 最高速度維持
                 Kp = 1e-2
