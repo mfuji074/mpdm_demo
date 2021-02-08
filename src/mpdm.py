@@ -6,15 +6,15 @@ class MPDM:
         self.dt = dt # time step
         self.th = th # horizon
 
-    def __compute_score(self, Car):
+    def compute_score(self, Car):
         score = 0.0
 
         # 最終位置が大きいほどスコアアップ
-        score += Car.pos_in_lane
+        score += Car.pos
 
         # 走行車線にいるとスコアアップ
         if Car.lane == 0:
-            score *= 1.3
+            score *= 1.1
 
         return score
 
@@ -34,7 +34,7 @@ class MPDM:
                 car.log_state()
 
         # スコア計算
-        score = self.__compute_score(Cars[0])
+        score = self.compute_score(Cars[0])
 
         return score
 

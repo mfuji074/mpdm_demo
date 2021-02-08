@@ -1,12 +1,14 @@
+import numpy as np
+
 class Car:
 
     # 車間距離
-    dst_threshold = 50
+    dst_threshold = 1000
 
-    def __init__(self, lane0, pos0_in_lane, vel0, acc0, vel_max = [1.0, 1.2], policy = 'keep_lane', is_closing = True):
+    def __init__(self, lane0, pos0, vel0, acc0, vel_max = [1.0, 1.2], policy = 'keep_lane', is_closing = True):
         # state
         self.lane = lane0
-        self.pos_in_lane = pos0_in_lane
+        self.pos = pos0
         self.vel = vel0
         self.acc = acc0
         self.vel_max = vel_max # 各レーンでの最高速度
@@ -21,17 +23,20 @@ class Car:
         self.ei_kd = 0.0
         self.ed_kd = 0.0
 
-
         # measurement
         self.lane_m = [] # 他車とレーンが一致しているか否か(bool)
         self.dst_m = [] # 他車との距離(1D)
         self.rvel_m = [] # 他車との相対速度(1D)
 
         # for plotting
-        self.lane_list = []
-        self.pos_list = []
-        self.vel_list = []
-        self.acc_list = []
+        #self.lane_his = np.empty(0)
+        #self.pos_his = np.empty(0)
+        #self.vel_his = np.empty(0)
+        #self.acc_his = np.empty(0)
+        self.lane_his = []
+        self.pos_his = []
+        self.vel_his = []
+        self.acc_his = []
 
 
     def measure(self, Car_list):
@@ -48,7 +53,7 @@ class Car:
                 self.lane_m.append(0)
 
             # 他車との距離
-            dst = Car_other.pos_in_lane - self.pos_in_lane
+            dst = Car_other.pos - self.pos
             self.dst_m.append(dst)
 
             # 他車との相対速度
@@ -70,10 +75,13 @@ class Car:
 
         # keep lane
         if self.policy == 'keep_lane':
-            if is_car_in_front and self.is_closing:
+            if is_car_in_front and dst < Car.dst_threshold*1.2  and self.is_closing:
                 # 車間距離維持
-                self.acc = 0.3
-
+                # 最高速度維持
+                Kp = 1e-7
+                Kd = 1e-3
+                e =  dst - Car.dst_threshold
+                self.acc = Kp * e + Kd * (e - self.ed_kd)/dt
                 self.ed_kd = e
             else:
                 # 最高速度維持
@@ -81,7 +89,6 @@ class Car:
                 Kd = 1e-6
                 e =  self.vel_max[self.lane] - self.vel
                 self.acc = Kp * e + Kd * (e - self.ed_kv)/dt
-
                 self.ed_kv = e
 
         # change lane
@@ -96,14 +103,18 @@ class Car:
 
     def update(self, dt):
         # 状態量更新
-        self.pos_in_lane += self.vel*dt
+        self.pos += self.vel*dt
         self.vel += self.acc*dt
 
 
     def log_state(self):
-        self.lane_list.append(self.lane)
-        self.pos_list.append(self.pos_in_lane)
-        self.vel_list.append(self.vel)
-        self.acc_list.append(self.acc)
+        #self.lane_his = np.append(self.lane_his, self.lane)
+        #self.pos_his = np.append(self.pos_his, self.pos)
+        #self.vel_his = np.append(self.vel_his, self.vel)
+        #self.acc_his = np.append(self.acc_his, self.acc)
+        self.lane_his.append(self.lane)
+        self.pos_his.append(self.pos)
+        self.vel_his.append(self.vel)
+        self.acc_his.append(self.acc)
 
 
