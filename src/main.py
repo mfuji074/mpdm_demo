@@ -15,11 +15,17 @@ dt = 1
 tspan = np.arange(dt, tf, dt)
 
 # car
+<<<<<<< HEAD
 car0 = Car(0, 0.0,  0.7, 0.0, [1.0, 1.2]) # lane, pos, vel, acc, vel_nominal(各レーンでの最高速度)
 car1 = Car(0, 6000.0, 0.7, 0.0, [0.8, 1.0])
 car2 = Car(1, 0.0,  1.0, 0.0, [0.9, 1.1])
 car3 = Car(1, 300.0,  1.0, 0.0, [0.9, 1.15])
 car4 = Car(-5000.0, 10000.0,  0.8, 0.0, [0.9, 1.1])
+=======
+car0 = Car(0, 0.0,  1.0, 0.0, [1.0, 1.2], 'keep_lane',) # lane, pos, vel, acc, vel_max(各レーンでの最高速度)
+car1 = Car(0, 2500.0, 0.8, 0.0, [0.8, 1.0], 'keep_lane', False)
+#car2 = Car(1, 0.0,  1.0, 0.0, [0.9, 1.1], 'keep_lane')
+>>>>>>> 361bed2852fa98a002a873f0812bfd725027267a
 
 cars = [car0, car1, car2, car4]
 
