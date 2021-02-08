@@ -11,29 +11,31 @@ from mpdm import MPDM
 
 # simulation period
 tf = 1e5
-dt = 0.1
+dt = 1
 tspan = np.arange(dt, tf, dt)
 
 # car
-car0 = Car(0, 0.0,  0.7, 0.0, [1.0, 1.2], 'keep_lane',) # lane, pos, vel, acc, vel_max(各レーンでの最高速度)
-car1 = Car(0, 6000.0, 0.7, 0.0, [0.8, 1.0], 'keep_lane', False)
-car2 = Car(1, 0.0,  1.0, 0.0, [0.9, 1.1], 'keep_lane', False)
-car3 = Car(1, 300.0,  1.0, 0.0, [0.9, 1.15], 'keep_lane', False)
-car4 = Car(0, 10000.0,  0.8, 0.0, [0.9, 1.1], 'keep_lane', False)
+car0 = Car(0, 0.0,  0.7, 0.0, [1.0, 1.2]) # lane, pos, vel, acc, vel_nominal(各レーンでの最高速度)
+car1 = Car(0, 6000.0, 0.7, 0.0, [0.8, 1.0])
+car2 = Car(1, 0.0,  1.0, 0.0, [0.9, 1.1])
+car3 = Car(1, 300.0,  1.0, 0.0, [0.9, 1.15])
+car4 = Car(-5000.0, 10000.0,  0.8, 0.0, [0.9, 1.1])
 
 cars = [car0, car1, car2, car4]
 
 # MPDM
 th = tf/10 # horizon
 mpdm_car0 = MPDM(dt, th)
-interval_mpdm = 1e4
+interval_mpdm = 1e2
 
 
 # simulation
 for i in range(len(tspan)):
 
     if (i % interval_mpdm) == 0:
-            cars[0].policy = mpdm_car0.optimize(cars)
+            policy_set = mpdm_car0.optimize(cars)
+            cars[0].Policy = policy_set[0]
+            cars[0].SubPolicy = policy_set[1]
 
     for car in cars:
         # measurement
