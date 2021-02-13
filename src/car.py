@@ -14,8 +14,9 @@ class SubPolicy(Enum):
 
 class Car:
 
-    # 車間距離
-    dst_threshold = 1000
+    # 車線変更時間遅れ
+    step_for_lanechange = 2
+    step = 0
 
     def __init__(self, lane0, pos0, vel0, acc0, vel_nominal = [1.0, 1.2], Policy_ini = Policy.KeepLane, SubPolicy_ini = SubPolicy.KeepAcc):
         # state
@@ -70,36 +71,39 @@ class Car:
         lane_idx = [i for i, lane in enumerate(self.lane_m) if lane == 1]
         # 同じレーンにいる最も近い車との距離
         try:
-            self.dst_min = min([abs(self.dst_m[i]) for i in lane_idx])
+            self.dst_min = min([abs(self.dst_m[i]) for i in lane_idx if abs(self.dst_m[i])>0.0])
             self.is_car_in_same_lane = 1
         except (ValueError, TypeError):
             self.is_car_in_same_lane = 0
 
 
     def exec_policy(self,dt):
-
         # policy
         if self.Policy == Policy.KeepLane:
             # 特になにもしない
             self.Policy = Policy.KeepLane
 
         elif self.Policy == Policy.ChangeLane:
-            if self.lane == 0:
-                self.lane = 1
-                self.Policy = Policy.KeepLane
-            else:
-                self.lane = 0
-                self.Policy = Policy.KeepLane
+            Car.step += 1
+            if Car.step == Car.step_for_lanechange:
+                if self.lane == 0:
+                    self.lane = 1
+                    self.Policy = Policy.KeepLane
+                else:
+                    self.lane = 0
+                    self.Policy = Policy.KeepLane
+
+                Car.step = 0
 
         # subpolicy
         if self.SubPolicy == SubPolicy.KeepAcc:
             self.acc = 0.0
 
         elif self.SubPolicy == SubPolicy.Accel:
-            self.acc = 0.1
+            self.acc = 0.01
 
         elif self.SubPolicy == SubPolicy.Decel:
-            self.acc = -0.1
+            self.acc = -0.01
 
 
     def update(self, dt):
