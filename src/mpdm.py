@@ -7,7 +7,7 @@ from plotter import plot_cars
 
 class MPDM:
 
-    car_dst = 5
+    car_dst = 2
 
     def __init__(self, dt, th, node, isfigure=False):
         self.dt = dt # time step
@@ -19,25 +19,25 @@ class MPDM:
         score = 0.0
 
         # 最終位置が大きいほどスコアアップ
-        score += 1*Car.pos_his[0]/(Car.pos_his[-1] - Car.pos_his[0])
+        score += 1e-4*Car.pos_his[0]/(Car.pos_his[-1] - Car.pos_his[0])
 
         # ノミナル速度から離れているとスコアダウン
-        score += 1000*(Car.vel_nominal[Car.lane] - Car.vel)**2
+        score += 100*(Car.vel_nominal[Car.lane] - Car.vel)**2
 
         # 障害物（他車）から一定距離空けないとスコアダウン
         if Car.is_car_in_same_lane:
             #score += ((Car.dst_min - MPDM.car_dst)/MPDM.car_dst)**2
-            score += 1000*(MPDM.car_dst/(Car.dst_min-MPDM.car_dst))**2
+            score += 1*(MPDM.car_dst/(Car.dst_min-MPDM.car_dst))**2
 
         if Car.Policy == policy_set_before[0]:
-            score *= 0.7
+            score *= 0.6
 
         if Car.SubPolicy == policy_set_before[1]:
-            score *= 0.7
+            score *= 0.6
 
         # 走行車線にいるとスコアアップ
         if Car.lane == 0:
-            score *= 0.6
+            score *= 0.5
 
         return score
 
@@ -56,8 +56,9 @@ class MPDM:
                 car.update(self.dt)
                 car.log_state()
 
-        # スコア計算
-        score = self.compute_score(Cars[0], policy_set_before)
+            # スコア計算
+            if i > 0:
+                score += self.compute_score(Cars[0], policy_set_before)
 
         return score
 
