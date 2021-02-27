@@ -19,25 +19,25 @@ class MPDM:
         score = 0.0
 
         # 最終位置が大きいほどスコアアップ
-        score += 1e-4*Car.pos_his[0]/(Car.pos_his[-1] - Car.pos_his[0])
+        score += 1*Car.pos_his[0]/(Car.pos_his[-1] - Car.pos_his[0])
 
         # ノミナル速度から離れているとスコアダウン
-        score += 100*(Car.vel_nominal[Car.lane] - Car.vel)**2
+        score += 10000*(Car.vel_nominal[Car.lane] - Car.vel)**2
 
         # 障害物（他車）から一定距離空けないとスコアダウン
         if Car.is_car_in_same_lane:
             #score += ((Car.dst_min - MPDM.car_dst)/MPDM.car_dst)**2
-            score += 1*(MPDM.car_dst/(Car.dst_min-MPDM.car_dst))**2
+            score += 100*(MPDM.car_dst/(Car.dst_min-MPDM.car_dst))**2
 
         if Car.Policy == policy_set_before[0]:
-            score *= 0.6
+            score *= 0.88
 
         if Car.SubPolicy == policy_set_before[1]:
-            score *= 0.6
+            score *= 0.88
 
         # 走行車線にいるとスコアアップ
         if Car.lane == 0:
-            score *= 0.5
+            score *= 0.8
 
         return score
 

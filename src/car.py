@@ -101,10 +101,10 @@ class Car:
             self.acc = 0.0
 
         elif self.SubPolicy == SubPolicy.Accel:
-            self.acc = 1e-2
+            self.acc = 5e-3
 
         elif self.SubPolicy == SubPolicy.Decel:
-            self.acc = -1e-2
+            self.acc = -5e-3
 
 
     def update(self, dt):
