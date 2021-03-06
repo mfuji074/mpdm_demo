@@ -5,7 +5,6 @@ class Policy(Enum):
     KeepLane = auto()
     ChangeLane = auto()
 
-
 class SubPolicy(Enum):
     KeepAcc = auto()
     Accel = auto()
@@ -120,7 +119,7 @@ class Car:
         self.acc_his.append(self.acc)
         self.dst_min_his.append(self.dst_min)
 
-    def log_init(self):
+    def init_log(self):
         self.lane_his = []
         self.pos_his = []
         self.vel_his = []
