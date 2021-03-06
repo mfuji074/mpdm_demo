@@ -1,7 +1,6 @@
 import copy
 import numpy as np
 import matplotlib.pyplot as plt
-from operator import attrgetter
 
 from car import Policy, SubPolicy
 from plotter import plot_cars
@@ -109,13 +108,14 @@ class MPDM:
 
     car_dst = 2
 
-    def __init__(self, dt, th, tree_length=1, is_animation=False):
+    def __init__(self, dt, th, tree_length=1):
         self.dt = dt
         self.th = th # timestep [sec]
         self.tree_length = tree_length
-        self.is_animation = is_animation
 
         self.policy_num = len(Policy)*len(SubPolicy)
+        self.best_states = []
+        self.best_policy = []
 
     def optimize(self, Cars):
 
@@ -134,9 +134,9 @@ class MPDM:
             root_node.expand_end_child_node()
 
         # 最適なポリシーを取得する
-        best_policy = self.explore_best_policy(root_node)
+        self.explore_best_policy(root_node)
 
-        return best_policy[0]
+        return self.best_policy[0]
 
     def explore_best_policy(self, root_node):
         # 最適ノードからポリシー列,状態を取得する
@@ -144,17 +144,11 @@ class MPDM:
         scores = []
         states = []
         policies = []
-        best_policy = []
 
         root_node.get_scores_states_policies(scores, states, policies)
 
         best_index = scores.index(min(scores))
-        best_states = states[best_index]
-        best_policy = policies[best_index]
+        self.best_states = states[best_index]
+        self.best_policy = policies[best_index]
 
-#        if self.is_animation:
-#            plot_animation(states)
 
-        return best_policy
-
-#    def plot_animation(self, states):

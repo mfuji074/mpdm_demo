@@ -6,7 +6,6 @@ import numpy as np
 import copy
 import time
 
-import plotter
 from car import Car
 from mpdm import MPDM
 
@@ -18,17 +17,25 @@ tspan = np.arange(dt, tf, dt)
 # car
 car0 = Car(0, 0.0,  0.7, 0.0, [1.0, 1.2]) # lane, pos, vel, acc, vel_nominal(各レーンでの最高速度)
 car1 = Car(0, 50.0, 0.7, 0.0, [0.8, 1.0])
-car2 = Car(1, -10.0,  1.05, 0.0, [1.0, 1.1])
-car3 = Car(0, 70.0,  0.8, 0.0, [0.9, 1.15])
+car2 = Car(1, 0.0,  1.05, 0.0, [1.0, 1.1])
+car3 = Car(0, 100.0,  0.8, 0.0, [0.9, 1.15])
 
-cars = [car0, car1, car2, car3]#, car2, car4]
+cars = [car0, car1, car2, car3]
 
 # MPDM
 dt_mpdm = dt # timestep [sec]
-th = 10 # horizon [sec]
+th = 30 # horizon [sec]
 tree_length = 3
-mpdm_car0 = MPDM(dt_mpdm, th, tree_length, False)
-interval_mpdm = 20
+interval_mpdm = 10
+is_figure = True
+
+mpdm_car0 = MPDM(dt_mpdm, th, tree_length)
+if is_figure:
+    best_policy_list = []
+    best_states_list = []
+    fig = plt.figure(figsize=(6,15))
+    ax = fig.add_subplot(111)
+    ims = []
 
 
 # simulation
@@ -41,6 +48,9 @@ for i in range(len(tspan)):
         policy_set = mpdm_car0.optimize(cars)
         cars[0].Policy = policy_set[0]
         cars[0].SubPolicy = policy_set[1]
+        if is_figure:
+            best_policy_list.append(mpdm_car0.best_policy)
+            best_states_list.append(mpdm_car0.best_states)
 
     for car in cars:
         # measurement
@@ -73,7 +83,6 @@ for i,car in enumerate(cars):
         plt.plot(tspan, pos_tmp)
     else:
         plt.plot(tspan, np.zeros(len(tspan)), linestyle = "dashed")
-    #plt.hlines([0], tspan[0], tspan[-1], "blue", linestyles='dashed')
 
 plt.subplot(5,1,3)
 for i,car in enumerate(cars):
@@ -86,23 +95,47 @@ plt.subplot(5,1,5)
 for i,car in enumerate(cars):
     plt.plot(tspan, car.lane_his)
 
-'''
-for i,car in enumerate(cars):
-    if i > 0:
-        plt.figure()
-        pos_tmp = [x - y for (x, y) in zip(cars[i].pos_his, cars[0].pos_his)]
-        plt.plot(tspan, pos_tmp)
+plt.savefig("result.png")
 
+def plot_cars(index):
+    # plot best policy for animation
+    ax.clear()
+    ax.set_xlim(-0.6, 1.6)
+    ax.set_ylim(0, best_states_list[-1][0].pos_his[-1]*1.2)
+    ax.set_xlabel("Lane", fontsize = 12)
+    ax.set_ylabel("Position", fontsize = 12)
 
-plt.figure()
-plt.plot(cars[0].lane_his, cars[0].pos_his)
+    for i, car in enumerate(best_states_list[index]):
+        if i == 0:
+            color = '#FF0000'
+        else:
+            color = '#0000FF'
 
-for i, car in enumerate(cars):
-    if i == 0:
-        color = '#FF0000'
-    else:
-        color = '#0000FF'
-    ax.plot(car[i].lane_his, car[i].pos_his, color)
-'''
+        ax.axvline(x=-0.5, color="black", alpha=0.7)
+        ax.axvline(x=0.5, color="black", alpha=0.7)
+        ax.axvline(x=1.5, color="black", alpha=0.7)
+
+        bias_x = 0.07
+        lane_tmp = [lane+i*bias_x for lane in car.lane_his]
+        # 車の初期位置
+        ax.scatter(lane_tmp[0], car.pos_his[0], s=200, marker="o", c=color)
+        # 車の速度
+        str_vel = "{:.2f}".format(car.vel_his[0])
+        ax.text( lane_tmp[0]+bias_x, car.pos_his[0], f"Velocity = {str_vel}")
+        # 自車のポリシー
+        if i == 0:
+            bias_y = 20
+            for j in range(tree_length):
+                ax.text( lane_tmp[0]-0.4, car.pos_his[0]-bias_y, f"{best_policy_list[index][j][0]}")
+                ax.text( lane_tmp[0]+0.25, car.pos_his[0]-bias_y, f"{best_policy_list[index][j][1]}")
+                bias_y += 10
+        # 車の軌跡
+        ax.plot(lane_tmp, car.pos_his, color)
+        # 車の終点
+        ax.scatter(lane_tmp[-1], car.pos_his[-1], s=100, marker="^", c=color)
+
+if is_figure:
+    ani = animation.FuncAnimation(fig, plot_cars, frames=len(best_states_list), interval=100, repeat=True)
+    ani.save("mpdm_result.gif", writer = 'pillow')
 
 plt.show()

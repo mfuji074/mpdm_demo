@@ -14,7 +14,7 @@ class SubPolicy(Enum):
 class Car:
 
     # 車線変更時間遅れ
-    step_for_lanechange = 1
+    step_for_lanechange = 2
     step = 0
 
     def __init__(self, lane0, pos0, vel0, acc0, vel_nominal = [1.0, 1.2], Policy_ini = Policy.KeepLane, SubPolicy_ini = SubPolicy.KeepAcc):
