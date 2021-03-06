@@ -24,8 +24,8 @@ cars = [car0, car1, car2, car3]
 
 # MPDM
 dt_mpdm = dt # timestep [sec]
-th = 30 # horizon [sec]
-tree_length = 3
+th = 50 # horizon [sec]
+tree_length = 2
 interval_mpdm = 10
 is_figure = True
 

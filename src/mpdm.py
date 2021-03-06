@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from car import Policy, SubPolicy
-from plotter import plot_cars
 
 class MpdmNode:
     def __init__(self, Cars, dt, th, score, policy = []):
@@ -140,7 +139,6 @@ class MPDM:
 
     def explore_best_policy(self, root_node):
         # 最適ノードからポリシー列,状態を取得する
-        # 状態からアニメーションを生成する
         scores = []
         states = []
         policies = []
