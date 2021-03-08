@@ -25,8 +25,8 @@ class MpdmNode:
 
         # 障害物（他車）から一定距離空けないとスコアダウン
         if Car.is_car_in_same_lane:
-            #score += ((Car.dst_min - MPDM.car_dst)/MPDM.car_dst)**2
-            score += 10000*(MPDM.car_dst/(Car.dst_min-MPDM.car_dst))**2
+            safe_distance = 2
+            score += 10000*(safe_distance/(Car.dst_min-safe_distance))**2
 
         if Car.Policy == previous_policy[0]:
             score *= 0.9
@@ -92,20 +92,24 @@ class MpdmNode:
             else:
                 child_node.get_end_child_nodes(end_child_nodes)
 
-    def get_scores_states_policies(self, scores, states, policies):
-        # 末端ノードのスコアおよび状態とポリシー列を取得する
-        for child_node in self.child_nodes:
-            if child_node.child_nodes is None:
-                scores.append(child_node.score)
-                states.append(child_node.Cars)
-                policies.append(child_node.policy)
-            else:
-                child_node.get_scores_states_policies(scores, states, policies)
+    def get_scores_states_policies(self):
+        # 末端ノードのスコア、状態、ポリシー列を取得する
+        end_child_nodes = []
+        scores = []
+        states = []
+        policies = []
+
+        self.get_end_child_nodes(end_child_nodes)
+
+        for end_child_node in end_child_nodes:
+            scores.append(end_child_node.score)
+            states.append(end_child_node.Cars)
+            policies.append(end_child_node.policy)
+
+        return scores, states, policies
 
 
 class MPDM:
-
-    car_dst = 2
 
     def __init__(self, dt, th, tree_length=1):
         self.dt = dt
@@ -113,11 +117,8 @@ class MPDM:
         self.tree_length = tree_length
 
         self.policy_num = len(Policy)*len(SubPolicy)
-        self.best_states = []
-        self.best_policy = []
 
     def optimize(self, Cars):
-
         # コスト計算用に別オブジェクト生成
         Cars_ini = copy.deepcopy(Cars)
         for i in range(len(Cars_ini)):
@@ -138,13 +139,10 @@ class MPDM:
         return self.best_policy[0]
 
     def explore_best_policy(self, root_node):
-        # 最適ノードからポリシー列,状態を取得する
-        scores = []
-        states = []
-        policies = []
+        # 末端ノードのスコア、状態、ポリシーを取得
+        scores, states, policies = root_node.get_scores_states_policies()
 
-        root_node.get_scores_states_policies(scores, states, policies)
-
+        # スコアから最適ポリシーと状態を取得
         best_index = scores.index(min(scores))
         self.best_states = states[best_index]
         self.best_policy = policies[best_index]

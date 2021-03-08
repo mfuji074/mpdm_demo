@@ -10,7 +10,7 @@ from car import Car
 from mpdm import MPDM
 
 # simulation period
-tf = 600
+tf = 1000
 dt = 0.5
 tspan = np.arange(dt, tf, dt)
 
@@ -23,13 +23,14 @@ car3 = Car(0, 100.0,  0.8, 0.0, [0.9, 1.15])
 cars = [car0, car1, car2, car3]
 
 # MPDM
-dt_mpdm = dt # timestep [sec]
-th = 50 # horizon [sec]
+dt_mpdm = dt # timestep
+th = 30 # horizon
 tree_length = 2
-interval_mpdm = 10
+interval_mpdm = 6 # mpdm execution interval
 is_figure = True
 
 mpdm_car0 = MPDM(dt_mpdm, th, tree_length)
+
 if is_figure:
     best_policy_list = []
     best_states_list = []
@@ -75,6 +76,7 @@ plt.figure()
 plt.subplot(5,1,1)
 for i,car in enumerate(cars):
     plt.plot(tspan, car.pos_his)
+plt.xlabel("Pos")
 
 plt.subplot(5,1,2)
 for i,car in enumerate(cars):
@@ -83,17 +85,22 @@ for i,car in enumerate(cars):
         plt.plot(tspan, pos_tmp)
     else:
         plt.plot(tspan, np.zeros(len(tspan)), linestyle = "dashed")
+plt.xlabel("Relative Pos")
 
 plt.subplot(5,1,3)
 for i,car in enumerate(cars):
     plt.plot(tspan, car.vel_his)
+plt.xlabel("Vel")
 
 plt.subplot(5,1,4)
 for i,car in enumerate(cars):
     plt.plot(tspan, car.acc_his)
+plt.xlabel("Acc")
+
 plt.subplot(5,1,5)
 for i,car in enumerate(cars):
     plt.plot(tspan, car.lane_his)
+plt.xlabel("Lane")
 
 plt.savefig("result.png")
 
@@ -135,7 +142,8 @@ def plot_cars(index):
         ax.scatter(lane_tmp[-1], car.pos_his[-1], s=100, marker="^", c=color)
 
 if is_figure:
-    ani = animation.FuncAnimation(fig, plot_cars, frames=len(best_states_list), interval=100, repeat=True)
-    ani.save("mpdm_result.gif", writer = 'pillow')
+    ani = animation.FuncAnimation(fig, plot_cars, frames=len(best_states_list), interval=10, repeat=True)
+    #ani.save("mpdm_result.gif", writer = 'pillow')
+    ani.save("mpdm_result.mp4", writer = 'ffmpeg')
 
 plt.show()
