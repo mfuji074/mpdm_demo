@@ -21,22 +21,23 @@ class MpdmNode:
         score += 1*Car.pos_his[0]/(Car.pos_his[-1] - Car.pos_his[0])
 
         # ノミナル速度から離れているとスコアダウン
-        score += 20000*(Car.vel_nominal[Car.lane] - Car.vel)**2
+        score += 2000*(Car.vel_nominal[Car.lane] - Car.vel)**2
 
         # 障害物（他車）から一定距離空けないとスコアダウン
         if Car.is_car_in_same_lane:
             safe_distance = 2
-            score += 10000*(safe_distance/(Car.dst_min-safe_distance))**2
+            #score += 100*(safe_distance/(Car.dst_min-safe_distance))**2
+            score += 1000*(1/Car.dst_min)**2
 
         if Car.Policy == previous_policy[0]:
-            score *= 0.9
+            score *= 0.8
 
         if Car.SubPolicy == previous_policy[1]:
-            score *= 0.9
+            score *= 0.8
 
         # 走行車線にいるとスコアアップ
         if Car.lane == 0:
-            score *= 0.95
+            score *= 0.5
 
         return score
 
@@ -116,13 +117,11 @@ class MPDM:
         self.th = th # timestep [sec]
         self.tree_length = tree_length
 
-        self.policy_num = len(Policy)*len(SubPolicy)
-
     def optimize(self, Cars):
-        # コスト計算用に別オブジェクト生成
+        # コスト計算用に別オブジェクト生成 + ログの初期化
         Cars_ini = copy.deepcopy(Cars)
-        for i in range(len(Cars_ini)):
-            Cars_ini[i].init_log()
+        for Car in Cars_ini:
+            Car.init_log()
 
         # 第一ノードを生成し、一段の予測を行う
         score_ini = 0
@@ -146,5 +145,4 @@ class MPDM:
         best_index = scores.index(min(scores))
         self.best_states = states[best_index]
         self.best_policy = policies[best_index]
-
 

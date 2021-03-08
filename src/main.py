@@ -3,28 +3,28 @@ import matplotlib.patches as patches
 import matplotlib.animation as animation
 
 import numpy as np
-import copy
 import time
 
 from car import Car
 from mpdm import MPDM
 
 # simulation period
-tf = 1000
+tf = 800
 dt = 0.5
 tspan = np.arange(dt, tf, dt)
 
 # car
-car0 = Car(0, 0.0,  0.7, 0.0, [1.0, 1.2]) # lane, pos, vel, acc, vel_nominal(各レーンでの最高速度)
+car0 = Car(0, 0.0,  0.7, 0.0, [1.0, 1.2]) # lane, pos, vel, acc, vel_nominal(各レーンでの定常速度)
 car1 = Car(0, 50.0, 0.7, 0.0, [0.8, 1.0])
 car2 = Car(1, 0.0,  1.05, 0.0, [1.0, 1.1])
-car3 = Car(0, 100.0,  0.8, 0.0, [0.9, 1.15])
+car3 = Car(0, 120.0,  0.8, 0.0, [0.9, 1.15])
 
 cars = [car0, car1, car2, car3]
+#cars = [car0, car1]
 
 # MPDM
 dt_mpdm = dt # timestep
-th = 30 # horizon
+th = 50 # horizon
 tree_length = 2
 interval_mpdm = 6 # mpdm execution interval
 is_figure = True
@@ -70,13 +70,12 @@ for i in range(len(tspan)):
 elapsed_time = time.time() - start
 print ("elapsed_time:{0}".format(elapsed_time) + "[sec]")
 
-
 # plot
 plt.figure()
 plt.subplot(5,1,1)
 for i,car in enumerate(cars):
     plt.plot(tspan, car.pos_his)
-plt.xlabel("Pos")
+plt.ylabel("Pos")
 
 plt.subplot(5,1,2)
 for i,car in enumerate(cars):
@@ -85,22 +84,23 @@ for i,car in enumerate(cars):
         plt.plot(tspan, pos_tmp)
     else:
         plt.plot(tspan, np.zeros(len(tspan)), linestyle = "dashed")
-plt.xlabel("Relative Pos")
+plt.ylabel("Relative Pos")
 
 plt.subplot(5,1,3)
 for i,car in enumerate(cars):
     plt.plot(tspan, car.vel_his)
-plt.xlabel("Vel")
+plt.ylabel("Vel")
 
 plt.subplot(5,1,4)
 for i,car in enumerate(cars):
     plt.plot(tspan, car.acc_his)
-plt.xlabel("Acc")
+plt.ylabel("Acc")
 
 plt.subplot(5,1,5)
 for i,car in enumerate(cars):
     plt.plot(tspan, car.lane_his)
-plt.xlabel("Lane")
+plt.ylabel("Lane")
+plt.xlabel("Time")
 
 plt.savefig("result.png")
 
