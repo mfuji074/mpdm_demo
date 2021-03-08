@@ -27,11 +27,12 @@ dt_mpdm = dt # timestep
 th = 50 # horizon
 tree_length = 2
 interval_mpdm = 6 # mpdm execution interval
-is_figure = True
+is_animation = True
+is_mp4 = True
 
 mpdm_car0 = MPDM(dt_mpdm, th, tree_length)
 
-if is_figure:
+if is_animation:
     best_policy_list = []
     best_states_list = []
     fig = plt.figure(figsize=(6,15))
@@ -49,7 +50,7 @@ for i in range(len(tspan)):
         policy_set = mpdm_car0.optimize(cars)
         cars[0].Policy = policy_set[0]
         cars[0].SubPolicy = policy_set[1]
-        if is_figure:
+        if is_animation:
             best_policy_list.append(mpdm_car0.best_policy)
             best_states_list.append(mpdm_car0.best_states)
 
@@ -141,9 +142,11 @@ def plot_cars(index):
         # 車の終点
         ax.scatter(lane_tmp[-1], car.pos_his[-1], s=100, marker="^", c=color)
 
-if is_figure:
+if is_animation:
     ani = animation.FuncAnimation(fig, plot_cars, frames=len(best_states_list), interval=10, repeat=True)
-    #ani.save("mpdm_result.gif", writer = 'pillow')
-    ani.save("mpdm_result.mp4", writer = 'ffmpeg')
+    if is_mp4:
+        ani.save("mpdm_result.mp4", writer = 'ffmpeg')
+    else:
+        ani.save("mpdm_result.gif", writer = 'pillow')
 
 plt.show()
