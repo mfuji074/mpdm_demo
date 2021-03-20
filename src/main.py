@@ -5,7 +5,7 @@ import matplotlib.animation as animation
 import numpy as np
 import time
 
-from car import Car
+from car import Car, CarType
 from mpdm import MPDM
 
 # simulation period
@@ -14,11 +14,11 @@ dt = 0.5 # sec
 tspan = np.arange(dt, tf, dt)
 
 # car
-car0 = Car(0, 0.0,  20.0, 0.0, [30.0, 40.0]) # lane, pos [m], vel [km/h], acc [m/s^2], vel_nominal[km/h] (各レーンでの定常速度)
-car1 = Car(0, 100.0, 26.0, 0.0, [26.0, 36.0])
-car2 = Car(1, 50.0,  29.0, 0.0, [29.0, 39.0])
-car3 = Car(0, 200.0,  28.0, 0.0, [28.0, 38.0])
-car4 = Car(1, 250.0,  29.0, 0.0, [29.0, 39.0])
+car0 = Car(0, 0.0,  20.0, 0.0, [30.0, 40.0], CarType.Ego) # lane, pos [m], vel [km/h], acc [m/s^2], vel_nominal[km/h] (各レーンでの定常速度)
+car1 = Car(0, 100.0, 26.0, 0.0, [26.0, 36.0], CarType.Other)
+car2 = Car(1, 50.0,  29.0, 0.0, [29.0, 39.0], CarType.Other)
+car3 = Car(0, 200.0,  28.0, 0.0, [28.0, 38.0], CarType.Other)
+car4 = Car(1, 250.0,  29.0, 0.0, [29.0, 39.0], CarType.Other)
 
 cars = [car0, car1, car2, car3, car4]
 

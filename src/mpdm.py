@@ -41,7 +41,7 @@ class MpdmNode:
             score *= 1.0
 
         # 走行車線にいるとスコアアップ
-        if int(Car.lane) == 0:
+        if abs(Car.lane) < 1e-6:
             score *= 0.7
 
         return score
