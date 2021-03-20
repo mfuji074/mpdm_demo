@@ -13,22 +13,20 @@ class SubPolicy(Enum):
 
 class Car:
 
-    # 車線変更時間遅れ
-    step_for_lanechange = 2
-    step = 0
-
-    def __init__(self, lane0, pos0, vel0, acc0, vel_nominal = [1.0, 1.2], Policy_ini = Policy.KeepLane, SubPolicy_ini = SubPolicy.KeepAcc):
+    def __init__(self, lane0, pos0, vel0, acc0, vel_nominal, Policy_ini = Policy.KeepLane, SubPolicy_ini = SubPolicy.KeepAcc):
         # state
         self.lane = lane0
         self.pos = pos0
         self.vel = vel0
         self.acc = acc0
         self.vel_nominal = vel_nominal # 各レーンでのノミナル速度
+        self.vel_lane = 0.0 # レーン方向速度
 
         # policy
         self.Policy = Policy_ini
         self.SubPolicy = SubPolicy_ini
-
+        self.is_lane_changing = False
+        self.count_lane_changing = 0
 
         # measurement
         self.lane_m = [] # 他車とレーンが一致しているか否か(bool)
@@ -54,7 +52,7 @@ class Car:
 
         for Car_other in Car_list:
             # レーンが一致しているか否か
-            if self.lane == Car_other.lane:
+            if abs(self.lane - Car_other.lane) < 1e-6:
                 self.lane_m.append(1)
             else:
                 self.lane_m.append(0)
@@ -78,39 +76,49 @@ class Car:
 
 
     def exec_policy(self,dt):
+        time_for_lane_changing_sec = 10
+
         # policy
         if self.Policy == Policy.KeepLane:
-            # 特になにもしない
-            self.Policy = Policy.KeepLane
+            self.vel_lane = 0.0
 
         elif self.Policy == Policy.ChangeLane:
-            Car.step += 1
-            if Car.step == Car.step_for_lanechange:
-                if self.lane == 0:
-                    self.lane = 1
-                    self.Policy = Policy.KeepLane
-                else:
-                    self.lane = 0
-                    self.Policy = Policy.KeepLane
 
-                Car.step = 0
+            if self.count_lane_changing == 0:
+                self.is_lane_changing = True
+                self.count_lane_changing += 1
+
+                if abs(self.lane) < 1e-6:
+                    self.vel_lane = 1/time_for_lane_changing_sec
+                else:
+                    self.vel_lane = -1/time_for_lane_changing_sec
+
+            elif self.count_lane_changing == int(time_for_lane_changing_sec/dt):
+                self.is_lane_changing = False
+                self.count_lane_changing = 0
+                self.vel_lane = 0.0
+                self.Policy = Policy.KeepLane
+
+            else:
+                self.count_lane_changing += 1
 
         # subpolicy
         if self.SubPolicy == SubPolicy.KeepAcc:
             self.acc = 0.0
 
         elif self.SubPolicy == SubPolicy.Accel:
-            self.acc = 5e-3
+            self.acc = 0.1
 
         elif self.SubPolicy == SubPolicy.Decel:
-            self.acc = -5e-3
+            self.acc = -0.1
 
 
     def update(self, dt):
+        kmh2ms = 1/3.6
         # 状態量更新
-        self.pos += self.vel*dt
-        self.vel += self.acc*dt
-
+        self.pos += self.vel*kmh2ms*dt
+        self.vel += self.acc*dt/kmh2ms
+        self.lane += self.vel_lane*dt
 
     def log_state(self):
         self.lane_his.append(self.lane)

@@ -18,26 +18,31 @@ class MpdmNode:
         score = 0.0
 
         # 最終位置が大きいほどスコアアップ
-        score += 1*Car.pos_his[0]/(Car.pos_his[-1] - Car.pos_his[0])
+        k1 = 10
+        score += k1*Car.pos_his[0]/(Car.pos_his[-1] - Car.pos_his[0])
 
         # ノミナル速度から離れているとスコアダウン
-        score += 2000*(Car.vel_nominal[Car.lane] - Car.vel)**2
+        k2 = 10
+        if Car.is_lane_changing:
+            #vel_ref = 0.5*(Car.vel_nominal[1] - Car.vel_nominal[0])
+            #score += k2*(vel_ref - Car.vel)**2
+            score += k2*(Car.vel_nominal[0] - Car.vel)**2
+        else:
+            score += k2*(Car.vel_nominal[int(Car.lane)] - Car.vel)**2
 
         # 障害物（他車）から一定距離空けないとスコアダウン
+        k3 = 1000
+        safe_distance = 10
         if Car.is_car_in_same_lane:
-            safe_distance = 2
-            #score += 100*(safe_distance/(Car.dst_min-safe_distance))**2
-            score += 1000*(1/Car.dst_min)**2
+            score += k3*(safe_distance/(abs(Car.dst_min)-safe_distance))**2
+            score += k3*(1/Car.dst_min)**2
 
-        if Car.Policy == previous_policy[0]:
-            score *= 0.8
-
-        if Car.SubPolicy == previous_policy[1]:
-            score *= 0.8
+        if Car.Policy == previous_policy[0] and Car.SubPolicy == previous_policy[1]:
+            score *= 1.0
 
         # 走行車線にいるとスコアアップ
-        if Car.lane == 0:
-            score *= 0.5
+        if int(Car.lane) == 0:
+            score *= 0.7
 
         return score
 
@@ -118,6 +123,7 @@ class MPDM:
         self.tree_length = tree_length
 
     def optimize(self, Cars):
+
         # コスト計算用に別オブジェクト生成 + ログの初期化
         Cars_ini = copy.deepcopy(Cars)
         for Car in Cars_ini:
@@ -135,7 +141,11 @@ class MPDM:
         # 最適なポリシーを取得する
         self.explore_best_policy(root_node)
 
-        return self.best_policy[0]
+        if Cars[0].is_lane_changing:
+            # 車線変更中はポリシー継続
+            return [Cars[0].Policy, Cars[0].SubPolicy]
+        else:
+            return self.best_policy[0]
 
     def explore_best_policy(self, root_node):
         # 末端ノードのスコア、状態、ポリシーを取得
@@ -145,4 +155,3 @@ class MPDM:
         best_index = scores.index(min(scores))
         self.best_states = states[best_index]
         self.best_policy = policies[best_index]
-

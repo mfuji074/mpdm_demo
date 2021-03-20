@@ -9,33 +9,33 @@ from car import Car
 from mpdm import MPDM
 
 # simulation period
-tf = 800
-dt = 0.5
+tf = 360 # sec
+dt = 0.5 # sec
 tspan = np.arange(dt, tf, dt)
 
 # car
-car0 = Car(0, 0.0,  0.7, 0.0, [1.0, 1.2]) # lane, pos, vel, acc, vel_nominal(各レーンでの定常速度)
-car1 = Car(0, 50.0, 0.7, 0.0, [0.8, 1.0])
-car2 = Car(1, 0.0,  1.05, 0.0, [1.0, 1.1])
-car3 = Car(0, 120.0,  0.8, 0.0, [0.9, 1.15])
+car0 = Car(0, 0.0,  20.0, 0.0, [30.0, 40.0]) # lane, pos [m], vel [km/h], acc [m/s^2], vel_nominal[km/h] (各レーンでの定常速度)
+car1 = Car(0, 100.0, 26.0, 0.0, [26.0, 36.0])
+car2 = Car(1, 50.0,  29.0, 0.0, [29.0, 39.0])
+car3 = Car(0, 200.0,  28.0, 0.0, [28.0, 38.0])
+car4 = Car(1, 250.0,  29.0, 0.0, [29.0, 39.0])
 
-cars = [car0, car1, car2, car3]
-#cars = [car0, car1]
+cars = [car0, car1, car2, car3, car4]
 
 # MPDM
-dt_mpdm = dt # timestep
-th = 50 # horizon
-tree_length = 2
+dt_mpdm = dt # timestep, sec
+th = 20 # horizon, sec
+tree_length = 1
 interval_mpdm = 6 # mpdm execution interval
 is_animation = True
-is_mp4 = True
+is_mp4 = False
 
 mpdm_car0 = MPDM(dt_mpdm, th, tree_length)
 
 if is_animation:
     best_policy_list = []
     best_states_list = []
-    fig = plt.figure(figsize=(6,15))
+    fig = plt.figure(figsize=(9,15))
     ax = fig.add_subplot(111)
     ims = []
 
@@ -73,12 +73,7 @@ print ("elapsed_time:{0}".format(elapsed_time) + "[sec]")
 
 # plot
 plt.figure()
-plt.subplot(5,1,1)
-for i,car in enumerate(cars):
-    plt.plot(tspan, car.pos_his)
-plt.ylabel("Pos")
-
-plt.subplot(5,1,2)
+plt.subplot(4,1,1)
 for i,car in enumerate(cars):
     if i > 0:
         pos_tmp = [x - y for (x, y) in zip(cars[i].pos_his, cars[0].pos_his)]
@@ -87,17 +82,17 @@ for i,car in enumerate(cars):
         plt.plot(tspan, np.zeros(len(tspan)), linestyle = "dashed")
 plt.ylabel("Relative Pos")
 
-plt.subplot(5,1,3)
+plt.subplot(4,1,2)
 for i,car in enumerate(cars):
     plt.plot(tspan, car.vel_his)
 plt.ylabel("Vel")
 
-plt.subplot(5,1,4)
+plt.subplot(4,1,3)
 for i,car in enumerate(cars):
     plt.plot(tspan, car.acc_his)
 plt.ylabel("Acc")
 
-plt.subplot(5,1,5)
+plt.subplot(4,1,4)
 for i,car in enumerate(cars):
     plt.plot(tspan, car.lane_his)
 plt.ylabel("Lane")
@@ -111,7 +106,7 @@ def plot_cars(index):
     ax.set_xlim(-0.6, 1.6)
     ax.set_ylim(0, best_states_list[-1][0].pos_his[-1]*1.2)
     ax.set_xlabel("Lane", fontsize = 12)
-    ax.set_ylabel("Position", fontsize = 12)
+    ax.set_ylabel("Position, m", fontsize = 12)
 
     for i, car in enumerate(best_states_list[index]):
         if i == 0:
@@ -129,21 +124,21 @@ def plot_cars(index):
         ax.scatter(lane_tmp[0], car.pos_his[0], s=200, marker="o", c=color)
         # 車の速度
         str_vel = "{:.2f}".format(car.vel_his[0])
-        ax.text( lane_tmp[0]+bias_x, car.pos_his[0], f"Velocity = {str_vel}")
+        ax.text( lane_tmp[0]+bias_x, car.pos_his[0], f"Velocity = {str_vel} km/h")
         # 自車のポリシー
         if i == 0:
-            bias_y = 20
+            bias_y = best_states_list[-1][0].pos_his[-1]/50
             for j in range(tree_length):
                 ax.text( lane_tmp[0]-0.4, car.pos_his[0]-bias_y, f"{best_policy_list[index][j][0]}")
                 ax.text( lane_tmp[0]+0.25, car.pos_his[0]-bias_y, f"{best_policy_list[index][j][1]}")
-                bias_y += 10
+                bias_y += best_states_list[-1][0].pos_his[-1]/50
         # 車の軌跡
         ax.plot(lane_tmp, car.pos_his, color)
         # 車の終点
         ax.scatter(lane_tmp[-1], car.pos_his[-1], s=100, marker="^", c=color)
 
 if is_animation:
-    ani = animation.FuncAnimation(fig, plot_cars, frames=len(best_states_list), interval=10, repeat=True)
+    ani = animation.FuncAnimation(fig, plot_cars, frames=len(best_states_list), interval=1, repeat=True)
     if is_mp4:
         ani.save("mpdm_result.mp4", writer = 'ffmpeg')
     else:
