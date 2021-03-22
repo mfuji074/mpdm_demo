@@ -16,7 +16,7 @@ class CarType(Enum):
 
 class Car:
 
-    def __init__(self, lane0, pos0, vel0, acc0, vel_nominal, CarType = CarType.Ego, Policy_ini = Policy.KeepLane, SubPolicy_ini = SubPolicy.KeepAcc):
+    def __init__(self, lane0, pos0, vel0, acc0, vel_nominal, CarType = CarType.Ego, Policy_ini = Policy.KeepLane, SubPolicy_ini = SubPolicy.KeepVel):
         # state
         self.lane = lane0
         self.pos = pos0
@@ -108,7 +108,7 @@ class Car:
                 self.count_lane_changing += 1
 
         # subpolicy
-        if self.SubPolicy == SubPolicy.KeepAcc:
+        if self.SubPolicy == SubPolicy.KeepVel:
             self.acc = 0.0
 
         elif self.SubPolicy == SubPolicy.Accel:

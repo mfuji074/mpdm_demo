@@ -25,7 +25,7 @@ cars = [car0, car1, car2, car3, car4]
 # MPDM
 dt_mpdm = dt # timestep, sec
 th = 20 # horizon, sec
-tree_length = 2
+tree_length = 1
 #th = th/tree_length
 interval_mpdm = 6 # mpdm execution interval
 is_animation = True

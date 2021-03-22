@@ -24,8 +24,6 @@ class MpdmNode:
         # ノミナル速度から離れているとスコアダウン
         k2 = 100
         if Car.is_lane_changing:
-            #vel_ref = 0.5*(Car.vel_nominal[1] - Car.vel_nominal[0])
-            #score += k2*(vel_ref - Car.vel)**2
             score += k2*(Car.vel_nominal[0] - Car.vel)**2
         else:
             score += k2*(Car.vel_nominal[int(Car.lane)] - Car.vel)**2
@@ -139,19 +137,26 @@ class MPDM:
             root_node.expand_end_child_node()
 
         # 最適なポリシーを取得する
-        self.explore_best_policy(root_node)
+        self.explore_best_policy(root_node, Cars[0])
 
-        if Cars[0].is_lane_changing:
-            # 車線変更中はポリシー継続
-            return [Cars[0].Policy, Cars[0].SubPolicy]
-        else:
-            return self.best_policy[0]
+        return self.best_policy[0]
 
-    def explore_best_policy(self, root_node):
+    def explore_best_policy(self, root_node, ego_car):
         # 末端ノードのスコア、状態、ポリシーを取得
         scores, states, policies = root_node.get_scores_states_policies()
 
         # スコアから最適ポリシーと状態を取得
-        best_index = scores.index(min(scores))
-        self.best_states = states[best_index]
-        self.best_policy = policies[best_index]
+        if ego_car.is_lane_changing:
+            # 車線変更中はポリシー継続
+            for i, policy_seq in enumerate(policies):
+                if policy_seq[0][0] == ego_car.Policy and policy_seq[0][1] == ego_car.SubPolicy:
+                    index = i
+                    break
+
+            self.best_states = states[index]
+            self.best_policy = policies[index]
+
+        else:
+            best_index = scores.index(min(scores))
+            self.best_states = states[best_index]
+            self.best_policy = policies[best_index]
