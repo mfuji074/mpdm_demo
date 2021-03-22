@@ -22,7 +22,7 @@ class MpdmNode:
         score += k1*Car.pos_his[0]/(Car.pos_his[-1] - Car.pos_his[0])
 
         # ノミナル速度から離れているとスコアダウン
-        k2 = 10
+        k2 = 100
         if Car.is_lane_changing:
             #vel_ref = 0.5*(Car.vel_nominal[1] - Car.vel_nominal[0])
             #score += k2*(vel_ref - Car.vel)**2
@@ -34,8 +34,8 @@ class MpdmNode:
         k3 = 1000
         safe_distance = 10
         if Car.is_car_in_same_lane:
-            score += k3*(safe_distance/(abs(Car.dst_min)-safe_distance))**2
-            score += k3*(1/Car.dst_min)**2
+            score += k3*(safe_distance/(abs(Car.dst_min)-safe_distance+1e-8))**2
+            score += k3*(1/(Car.dst_min+1e-8))**2
 
         if Car.Policy == previous_policy[0] and Car.SubPolicy == previous_policy[1]:
             score *= 0.8

@@ -6,7 +6,7 @@ class Policy(Enum):
     ChangeLane = auto()
 
 class SubPolicy(Enum):
-    KeepAcc = auto()
+    KeepVel = auto()
     Accel = auto()
     Decel = auto()
 
