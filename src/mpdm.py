@@ -38,11 +38,11 @@ class MpdmNode:
             score += k3*(1/Car.dst_min)**2
 
         if Car.Policy == previous_policy[0] and Car.SubPolicy == previous_policy[1]:
-            score *= 1.0
+            score *= 0.8
 
         # 走行車線にいるとスコアアップ
         if abs(Car.lane) < 1e-6:
-            score *= 0.7
+            score *= 0.8
 
         return score
 

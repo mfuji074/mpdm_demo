@@ -9,7 +9,7 @@ from car import Car, CarType
 from mpdm import MPDM
 
 # simulation period
-tf = 360 # sec
+tf = 480#1200 # sec
 dt = 0.5 # sec
 tspan = np.arange(dt, tf, dt)
 
@@ -25,7 +25,7 @@ cars = [car0, car1, car2, car3, car4]
 # MPDM
 dt_mpdm = dt # timestep, sec
 th = 20 # horizon, sec
-tree_length = 1
+tree_length = 2
 interval_mpdm = 6 # mpdm execution interval
 is_animation = True
 is_mp4 = False
