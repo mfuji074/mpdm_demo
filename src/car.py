@@ -57,7 +57,7 @@ class Car:
 
         for Car_other in Car_list:
             # レーンが一致しているか否か
-            if abs(self.lane - Car_other.lane) < 1e-6:
+            if abs(self.lane - Car_other.lane) < 0.5:
                 self.lane_m.append(1)
             else:
                 self.lane_m.append(0)
@@ -74,7 +74,7 @@ class Car:
         lane_idx = [i for i, lane in enumerate(self.lane_m) if lane == 1]
         # 同じレーンにいる最も近い車との距離
         try:
-            self.dst_min = min([abs(self.dst_m[i]) for i in lane_idx if abs(self.dst_m[i])>0.0])
+            self.dst_min = min([self.dst_m[i] for i in lane_idx if abs(self.dst_m[i])>0.0])
             self.is_car_in_same_lane = 1
         except (ValueError, TypeError):
             self.is_car_in_same_lane = 0
@@ -82,10 +82,21 @@ class Car:
 
     def exec_policy(self,dt):
         time_for_lane_changing_sec = 10
+        car_distance_threshold = 20
 
         # policy
         if self.Policy == Policy.KeepLane:
             self.vel_lane = 0.0
+
+            if self.CarType == CarType.Other:
+                if self.vel < self.vel_nominal[int(self.lane)]:
+                    self.SubPolicy = SubPolicy.Accel
+                else:
+                    self.SubPolicy = SubPolicy.Decel
+
+                if self.is_car_in_same_lane:
+                    if abs(self.dst_min) < car_distance_threshold and self.dst_min > 0:
+                        self.SubPolicy = SubPolicy.Decel
 
         elif self.Policy == Policy.ChangeLane:
 

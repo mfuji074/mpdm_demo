@@ -5,42 +5,52 @@ import matplotlib.pyplot as plt
 from car import Policy, SubPolicy
 
 class MpdmNode:
-    def __init__(self, Cars, dt, th, score, policy = []):
+    def __init__(self, Cars, dt, th, score, policy = [], coef = [10, 100, 1000, 0.8, 0.8, 1]):
         self.Cars = Cars
         self.dt = dt
         self.th = th
         self.score = score
         self.policy = policy
+        self.coef = coef
 
         self.child_nodes = None
 
-    def compute_score(self, Car, previous_policy):
+    def compute_score(self, Cars, previous_policy):
         score = 0.0
+        car_ego = Cars[0]
 
-        # 最終位置が大きいほどスコアアップ
-        k1 = 10
-        score += k1*Car.pos_his[0]/(Car.pos_his[-1] - Car.pos_his[0])
+        # 最終位置が大きいほどコスト減
+        k1 = self.coef[0]
+        score += k1*car_ego.pos_his[0]/(car_ego.pos_his[-1] - car_ego.pos_his[0])
 
-        # ノミナル速度から離れているとスコアダウン
-        k2 = 100
-        if Car.is_lane_changing:
-            score += k2*(Car.vel_nominal[0] - Car.vel)**2
+        # ノミナル速度から離れているとコスト増
+        k2 = self.coef[1]
+        if car_ego.is_lane_changing:
+            score += k2*(car_ego.vel_nominal[0] - car_ego.vel)**2
         else:
-            score += k2*(Car.vel_nominal[int(Car.lane)] - Car.vel)**2
+            score += k2*(car_ego.vel_nominal[int(car_ego.lane)] - car_ego.vel)**2
 
-        # 障害物（他車）から一定距離空けないとスコアダウン
-        k3 = 1000
+        # 障害物（他車）に近いとコスト増
+        k3 = self.coef[2]
         safe_distance = 10
-        if Car.is_car_in_same_lane:
-            score += k3*(safe_distance/(abs(Car.dst_min)-safe_distance+1e-8))**2
-            score += k3*(1/(Car.dst_min+1e-8))**2
+        for i,lane_m in enumerate(car_ego.lane_m):
+            if lane_m and i > 0:
+                for j in range(10):
+                    safe_distance_tmp = safe_distance*j/10
+                    score += k3*(safe_distance_tmp/(abs(car_ego.dst_m[i])-safe_distance_tmp+1e-8))**2
+                score += k3*(1/(abs(car_ego.dst_m[i])+1e-8))**2
 
-        if Car.Policy == previous_policy[0] and Car.SubPolicy == previous_policy[1]:
-            score *= 0.8
+        if car_ego.Policy == previous_policy[0] and car_ego.SubPolicy == previous_policy[1]:
+            score *= self.coef[3]
 
-        # 走行車線にいるとスコアアップ
-        if abs(Car.lane) < 1e-6:
-            score *= 0.8
+        # 走行車線にいるとコスト減
+        if abs(car_ego.lane) < 1e-6:
+            score *= self.coef[4]
+
+        # 他車の速度が変わるようなポリシーはコスト増
+        k4 = self.coef[5]
+        for car in Cars:
+            score += k4*(car.vel_nominal[int(car.lane)] - car.vel)**2
 
         return score
 
@@ -60,7 +70,7 @@ class MpdmNode:
 
             # スコア計算
             if i > 0:
-                score += self.compute_score(Cars[0], previous_policy)
+                score += self.compute_score(Cars, previous_policy)
 
         return score
 
@@ -78,7 +88,7 @@ class MpdmNode:
                 score = self.simulate_forward(Cars_tmp, previous_policy)
                 new_policy = copy.deepcopy(self.policy)
                 new_policy.append([policy, subpolicy])
-                self.child_nodes.append(MpdmNode(Cars_tmp, self.dt, self.th, self.score + score, new_policy))
+                self.child_nodes.append(MpdmNode(Cars_tmp, self.dt, self.th, self.score + score, new_policy, self.coef))
 
     def expand_end_child_node(self):
         # 末端ノードからノードを増やす
@@ -115,10 +125,11 @@ class MpdmNode:
 
 class MPDM:
 
-    def __init__(self, dt, th, tree_length=1):
+    def __init__(self, dt, th, tree_length=1, coef = [10, 100, 1000, 0.8, 0.8]):
         self.dt = dt
         self.th = th # timestep [sec]
         self.tree_length = tree_length
+        self.coef = coef
 
     def optimize(self, Cars):
 
@@ -129,7 +140,7 @@ class MPDM:
 
         # 第一ノードを生成し、一段の予測を行う
         score_ini = 0
-        root_node = MpdmNode(Cars_ini, self.dt, self.th, score_ini)
+        root_node = MpdmNode(Cars_ini, self.dt, self.th, score_ini, [], self.coef)
         root_node.expand()
 
         # 多段ポリシーの予測を行う
