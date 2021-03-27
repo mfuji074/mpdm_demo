@@ -9,29 +9,29 @@ from car import Car, CarType
 from mpdm import MPDM
 
 # simulation period
-tf = 600#1200 # sec
+tf = 300#1200 # sec
 dt = 0.5 # sec
 tspan = np.arange(dt, tf, dt)
 
 # car
-car0 = Car(0, 0.0,  20.0, 0.0, [30.0, 40.0], CarType.Ego) # lane, pos [m], vel [km/h], acc [m/s^2], vel_nominal[km/h] (各レーンでの定常速度)
-car1 = Car(0, 100.0, 26.0, 0.0, [26.0, 32.0], CarType.Other)
-car2 = Car(1, -200.0,  29.0, 0.0, [29.0, 32.0], CarType.Other)
-car3 = Car(0, 200.0,  28.0, 0.0, [28.0, 32.0], CarType.Other)
-car4 = Car(1, -100.0,  29.0, 0.0, [29.0, 32.0], CarType.Other)
+car0 = Car(0, 0.0,  20.0, 0.0, [30.0, 35.0], CarType.Ego) # lane, pos [m], vel [km/h], acc [m/s^2], vel_nominal[km/h] (各レーンでの定常速度)
+car1 = Car(0, 50.0, 26.0, 0.0, [26.0, 32.0], CarType.Other)
+car2 = Car(1, -120.0,  29.0, 0.0, [29.0, 32.0], CarType.Other)
+car3 = Car(0, 100.0,  27.0, 0.0, [28.0, 32.0], CarType.Other)
+car4 = Car(1, -70.0,  29.0, 0.0, [29.0, 32.0], CarType.Other)
 
 cars = [car0, car1, car2, car3, car4]
 
 # MPDM
 dt_mpdm = dt # timestep, sec
 th = 10 # horizon, sec
-tree_length = 3
+tree_length = 2
 #th = th/tree_length
 interval_mpdm = 6 # mpdm execution interval
 is_animation = True
 is_mp4 = False
 
-cost_coef = [100, 100, 1000, 0.7, 0.9, 10] # 距離、速度、車間距離、ポリシー維持バイアス、車線バイアス、他車の挙動
+cost_coef = [10, 100, 100, 0.8, 0.8, 1.2, 10000] # 距離、速度、車間距離、ポリシー維持バイアス、車線バイアス、車線変更コスト、他車の挙動
 mpdm_car0 = MPDM(dt_mpdm, th, tree_length, cost_coef)
 
 if is_animation:

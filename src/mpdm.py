@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from car import Policy, SubPolicy
 
 class MpdmNode:
-    def __init__(self, Cars, dt, th, score, policy = [], coef = [10, 100, 1000, 0.8, 0.8, 1]):
+    def __init__(self, Cars, dt, th, score, policy = [], coef = [10, 100, 1000, 0.8, 0.8, 1.2, 1]):
         self.Cars = Cars
         self.dt = dt
         self.th = th
@@ -47,10 +47,15 @@ class MpdmNode:
         if abs(car_ego.lane) < 1e-6:
             score *= self.coef[4]
 
+        # 車線変更はコスト増
+        if car_ego.Policy == Policy.ChangeLane:
+            score *= self.coef[5]
+
         # 他車の速度が変わるようなポリシーはコスト増
-        k4 = self.coef[5]
-        for car in Cars:
-            score += k4*(car.vel_nominal[int(car.lane)] - car.vel)**2
+        k4 = self.coef[6]
+        for i, car in enumerate(Cars):
+            if i > 0:
+                score += k4*(car.vel_nominal[int(car.lane)] - car.vel)**2
 
         return score
 
