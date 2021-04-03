@@ -9,29 +9,29 @@ from car import Car, CarType
 from mpdm import MPDM
 
 # simulation period
-tf = 300#1200 # sec
-dt = 0.5 # sec
+tf = 20#1200 # sec
+dt = 0.3 # sec
 tspan = np.arange(dt, tf, dt)
 
 # car
 car0 = Car(0, 0.0,  20.0, 0.0, [30.0, 35.0], CarType.Ego) # lane, pos [m], vel [km/h], acc [m/s^2], vel_nominal[km/h] (各レーンでの定常速度)
-car1 = Car(0, 50.0, 26.0, 0.0, [26.0, 32.0], CarType.Other)
-car2 = Car(1, -120.0,  29.0, 0.0, [29.0, 32.0], CarType.Other)
-car3 = Car(0, 100.0,  27.0, 0.0, [28.0, 32.0], CarType.Other)
-car4 = Car(1, -70.0,  29.0, 0.0, [29.0, 32.0], CarType.Other)
+car1 = Car(0, 10.0, 26.0, 0.0, [26.0, 32.0], CarType.Other)
+car2 = Car(1, -60.0,  29.0, 0.0, [29.0, 32.0], CarType.Other)
+car3 = Car(0, 20.0,  27.0, 0.0, [28.0, 32.0], CarType.Other)
+car4 = Car(1, -90.0,  29.0, 0.0, [29.0, 32.0], CarType.Other)
 
 cars = [car0, car1, car2, car3, car4]
 
 # MPDM
 dt_mpdm = dt # timestep, sec
 th = 10 # horizon, sec
-tree_length = 2
+tree_length = 1
 #th = th/tree_length
 interval_mpdm = 6 # mpdm execution interval
 is_animation = True
 is_mp4 = False
 
-cost_coef = [10, 100, 100, 0.8, 0.8, 1.2, 10000] # 距離、速度、車間距離、ポリシー維持バイアス、車線バイアス、車線変更コスト、他車の挙動
+cost_coef = [50, 500, 1, 0.8, 0.8, 1.2, 1] # 距離、速度、車間距離、ポリシー維持バイアス、車線バイアス、車線変更コスト、他車の挙動
 mpdm_car0 = MPDM(dt_mpdm, th, tree_length, cost_coef)
 
 if is_animation:
@@ -120,9 +120,14 @@ def plot_cars(index):
         ax.axvline(x=1.5, color="black", alpha=0.7)
 
         bias_x = 0.07
-        lane_tmp = [lane+i*bias_x for lane in car.lane_his]
+        #lane_tmp = [lane+i*bias_x for lane in car.lane_his]
+        lane_tmp = car.lane_his
         # 車の初期位置
-        ax.scatter(lane_tmp[0], car.pos_his[0], s=200, marker="o", c=color)
+        car_width = 0.5
+        car_height = 4.0
+        r = patches.Rectangle(xy=(lane_tmp[0]-car_width/2, car.pos_his[0]-car_height/2), width=car_width, height=car_height, ec=color, fc=color)
+        ax.add_patch(r)
+        #ax.scatter(lane_tmp[0], car.pos_his[0], s=200, marker="o", c=color)
         # 車の速度
         str_vel = "{:.2f}".format(car.vel_his[0])
         ax.text( lane_tmp[0]+bias_x, car.pos_his[0], f"Velocity = {str_vel} km/h")
@@ -133,10 +138,10 @@ def plot_cars(index):
                 ax.text( lane_tmp[0]-0.4, car.pos_his[0]-bias_y, f"{best_policy_list[index][j][0]}")
                 ax.text( lane_tmp[0]+0.25, car.pos_his[0]-bias_y, f"{best_policy_list[index][j][1]}")
                 bias_y += best_states_list[-1][0].pos_his[-1]/50
-        # 車の軌跡
-        ax.plot(lane_tmp, car.pos_his, color)
-        # 車の終点
-        ax.scatter(lane_tmp[-1], car.pos_his[-1], s=100, marker="^", c=color)
+            # 車の軌跡
+            ax.plot(lane_tmp, car.pos_his, color)
+            # 車の終点
+            ax.scatter(lane_tmp[-1], car.pos_his[-1], s=100, marker="^", c=color)
 
 if is_animation:
     ani = animation.FuncAnimation(fig, plot_cars, frames=len(best_states_list), interval=1, repeat=True)
