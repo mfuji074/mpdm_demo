@@ -32,7 +32,7 @@ class MpdmNode:
 
         # 障害物（他車）に近いとコスト増
         k3 = self.coef[2]
-        safe_distance = 3
+        safe_distance = 8
         for i,lane_m in enumerate(car_ego.lane_m):
             if lane_m and i > 0:
                 for j in range(10):

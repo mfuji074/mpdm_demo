@@ -82,7 +82,7 @@ class Car:
 
     def exec_policy(self,dt):
         time_for_lane_changing_sec = 10
-        car_distance_threshold = 6
+        car_distance_threshold = 16
 
         # policy
         if self.Policy == Policy.KeepLane:

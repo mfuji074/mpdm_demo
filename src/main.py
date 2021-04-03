@@ -9,8 +9,8 @@ from car import Car, CarType
 from mpdm import MPDM
 
 # simulation period
-tf = 20#1200 # sec
-dt = 0.3 # sec
+tf = 120#1200 # sec
+dt = 0.2 # sec
 tspan = np.arange(dt, tf, dt)
 
 # car
@@ -27,17 +27,17 @@ dt_mpdm = dt # timestep, sec
 th = 10 # horizon, sec
 tree_length = 1
 #th = th/tree_length
-interval_mpdm = 6 # mpdm execution interval
+interval_mpdm = 10 # mpdm execution interval
 is_animation = True
 is_mp4 = False
 
-cost_coef = [50, 500, 1, 0.8, 0.8, 1.2, 1] # 距離、速度、車間距離、ポリシー維持バイアス、車線バイアス、車線変更コスト、他車の挙動
+cost_coef = [100, 500, 100, 0.8, 0.8, 1.2, 1] # 距離、速度、車間距離、ポリシー維持バイアス、車線バイアス、車線変更コスト、他車の挙動
 mpdm_car0 = MPDM(dt_mpdm, th, tree_length, cost_coef)
 
 if is_animation:
     best_policy_list = []
     best_states_list = []
-    fig = plt.figure(figsize=(9,15))
+    fig = plt.figure(figsize=(3,40))
     ax = fig.add_subplot(111)
     ims = []
 
@@ -105,39 +105,39 @@ def plot_cars(index):
     # plot best policy for animation
     ax.clear()
     ax.set_xlim(-0.6, 1.6)
-    ax.set_ylim(0, best_states_list[-1][0].pos_his[-1]*1.2)
+    #pos_diff = best_states_list[index][0].pos_his[-1] - best_states_list[index][0].pos_his[0]
+    #ax.set_ylim(best_states_list[index][0].pos_his[0] - pos_diff, best_states_list[index][0].pos_his[-1]*1.2)
+    ax.set_ylim(best_states_list[index][0].pos_his[0] - 40, best_states_list[index][0].pos_his[0] + 40)
     ax.set_xlabel("Lane", fontsize = 12)
     ax.set_ylabel("Position, m", fontsize = 12)
 
     for i, car in enumerate(best_states_list[index]):
         if i == 0:
-            color = '#FF0000'
+            color = '#FF4500'
         else:
-            color = '#0000FF'
+            color = '#4169e1'
 
         ax.axvline(x=-0.5, color="black", alpha=0.7)
         ax.axvline(x=0.5, color="black", alpha=0.7)
         ax.axvline(x=1.5, color="black", alpha=0.7)
 
         bias_x = 0.07
-        #lane_tmp = [lane+i*bias_x for lane in car.lane_his]
         lane_tmp = car.lane_his
-        # 車の初期位置
+        # 車の位置
         car_width = 0.5
         car_height = 4.0
         r = patches.Rectangle(xy=(lane_tmp[0]-car_width/2, car.pos_his[0]-car_height/2), width=car_width, height=car_height, ec=color, fc=color)
         ax.add_patch(r)
-        #ax.scatter(lane_tmp[0], car.pos_his[0], s=200, marker="o", c=color)
         # 車の速度
         str_vel = "{:.2f}".format(car.vel_his[0])
-        ax.text( lane_tmp[0]+bias_x, car.pos_his[0], f"Velocity = {str_vel} km/h")
+        ax.text( lane_tmp[0]+bias_x, car.pos_his[0], f"{str_vel} km/h")
         # 自車のポリシー
         if i == 0:
-            bias_y = best_states_list[-1][0].pos_his[-1]/50
+            bias_y = -2.8
             for j in range(tree_length):
-                ax.text( lane_tmp[0]-0.4, car.pos_his[0]-bias_y, f"{best_policy_list[index][j][0]}")
-                ax.text( lane_tmp[0]+0.25, car.pos_his[0]-bias_y, f"{best_policy_list[index][j][1]}")
-                bias_y += best_states_list[-1][0].pos_his[-1]/50
+                ax.text( lane_tmp[0], car.pos_his[0]+bias_y, f"{best_policy_list[index][j][0]}")
+                ax.text( lane_tmp[0], car.pos_his[0]+bias_y-0.6, f"{best_policy_list[index][j][1]}")
+                bias_y += -4
             # 車の軌跡
             ax.plot(lane_tmp, car.pos_his, color)
             # 車の終点
