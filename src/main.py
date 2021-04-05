@@ -1,16 +1,17 @@
+import os
+import numpy as np
+import time
+
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib.animation as animation
-
-import numpy as np
-import time
 
 from car import Car, CarType
 from mpdm import MPDM
 
 # simulation period
-tf = 120#1200 # sec
-dt = 0.2 # sec
+tf = 240#1200 # sec
+dt = 0.5 # sec
 tspan = np.arange(dt, tf, dt)
 
 # car
@@ -25,21 +26,19 @@ cars = [car0, car1, car2, car3, car4]
 # MPDM
 dt_mpdm = dt # timestep, sec
 th = 10 # horizon, sec
-tree_length = 1
+tree_length = 2
 #th = th/tree_length
-interval_mpdm = 10 # mpdm execution interval
+interval_mpdm = 6 # mpdm execution interval
 is_animation = True
 is_mp4 = False
 
-cost_coef = [100, 500, 100, 0.8, 0.8, 1.2, 1] # 距離、速度、車間距離、ポリシー維持バイアス、車線バイアス、車線変更コスト、他車の挙動
+cost_coef = [1, 10, 100, 1, 0.7, 1, 1] # 距離、速度、車間距離、ポリシー維持バイアス、車線バイアス、車線変更コスト、他車の挙動
 mpdm_car0 = MPDM(dt_mpdm, th, tree_length, cost_coef)
 
 if is_animation:
+    animation_times = 50 # ×50 speed
     best_policy_list = []
     best_states_list = []
-    fig = plt.figure(figsize=(3,40))
-    ax = fig.add_subplot(111)
-    ims = []
 
 
 # simulation
@@ -99,7 +98,12 @@ for i,car in enumerate(cars):
 plt.ylabel("Lane")
 plt.xlabel("Time")
 
-plt.savefig("result.png")
+dir = './result'  # 作りたいディレクトリ名
+
+if not os.path.exists(dir):  # 無ければ
+    os.makedirs(dir)
+
+plt.savefig("./result/result.png")
 
 def plot_cars(index):
     # plot best policy for animation
@@ -121,7 +125,6 @@ def plot_cars(index):
         ax.axvline(x=0.5, color="black", alpha=0.7)
         ax.axvline(x=1.5, color="black", alpha=0.7)
 
-        bias_x = 0.07
         lane_tmp = car.lane_his
         # 車の位置
         car_width = 0.5
@@ -129,6 +132,7 @@ def plot_cars(index):
         r = patches.Rectangle(xy=(lane_tmp[0]-car_width/2, car.pos_his[0]-car_height/2), width=car_width, height=car_height, ec=color, fc=color)
         ax.add_patch(r)
         # 車の速度
+        bias_x = 0.07
         str_vel = "{:.2f}".format(car.vel_his[0])
         ax.text( lane_tmp[0]+bias_x, car.pos_his[0], f"{str_vel} km/h")
         # 自車のポリシー
@@ -137,17 +141,66 @@ def plot_cars(index):
             for j in range(tree_length):
                 ax.text( lane_tmp[0], car.pos_his[0]+bias_y, f"{best_policy_list[index][j][0]}")
                 ax.text( lane_tmp[0], car.pos_his[0]+bias_y-0.6, f"{best_policy_list[index][j][1]}")
-                bias_y += -4
+                bias_y += -1.5
             # 車の軌跡
             ax.plot(lane_tmp, car.pos_his, color)
             # 車の終点
             ax.scatter(lane_tmp[-1], car.pos_his[-1], s=100, marker="^", c=color)
 
+def plot_cars_birdeye(index):
+    # plot best policy for animation
+    ax.clear()
+    ax.set_xlim(-0.6, 1.6)
+    ax.set_ylim(0, best_states_list[-1][0].pos_his[-1]*1.2)
+    ax.set_xlabel("Lane", fontsize = 12)
+    ax.set_ylabel("Position, m", fontsize = 12)
+
+    for i, car in enumerate(best_states_list[index]):
+        if i == 0:
+            color = '#FF0000'
+        else:
+            color = '#0000FF'
+
+        ax.axvline(x=-0.5, color="black", alpha=0.7)
+        ax.axvline(x=0.5, color="black", alpha=0.7)
+        ax.axvline(x=1.5, color="black", alpha=0.7)
+
+        bias_x = 0.07
+        lane_tmp = [lane+i*bias_x for lane in car.lane_his]
+        # 車の初期位置
+        ax.scatter(lane_tmp[0], car.pos_his[0], s=200, marker="o", c=color)
+        # 車の速度
+        str_vel = "{:.2f}".format(car.vel_his[0])
+        ax.text( lane_tmp[0]+bias_x, car.pos_his[0], f"Velocity = {str_vel} km/h")
+        # 自車のポリシー
+        if i == 0:
+            bias_y = best_states_list[-1][0].pos_his[-1]/50
+            for j in range(tree_length):
+                ax.text( lane_tmp[0]-0.4, car.pos_his[0]-bias_y, f"{best_policy_list[index][j][0]}")
+                ax.text( lane_tmp[0]+0.25, car.pos_his[0]-bias_y, f"{best_policy_list[index][j][1]}")
+                bias_y += best_states_list[-1][0].pos_his[-1]/50
+        # 車の軌跡
+        ax.plot(lane_tmp, car.pos_his, color)
+        # 車の終点
+        ax.scatter(lane_tmp[-1], car.pos_his[-1], s=100, marker="^", c=color)
+
 if is_animation:
-    ani = animation.FuncAnimation(fig, plot_cars, frames=len(best_states_list), interval=1, repeat=True)
+
+    fig = plt.figure(figsize=(4,30))
+    ax = fig.add_subplot(111)
+    ani = animation.FuncAnimation(fig, plot_cars, frames=len(best_states_list), interval=dt*interval_mpdm*200/animation_times, repeat=True)
+
     if is_mp4:
-        ani.save("mpdm_result.mp4", writer = 'ffmpeg')
+        ani.save("./result/mpdm_result.mp4", writer = 'ffmpeg')
     else:
-        ani.save("mpdm_result.gif", writer = 'pillow')
+        ani.save("./result/mpdm_result.gif", writer = 'pillow')
+
+    fig = plt.figure(figsize=(4,30))
+    ax = fig.add_subplot(111)
+    ani = animation.FuncAnimation(fig, plot_cars_birdeye, frames=len(best_states_list), interval=dt*interval_mpdm*200/animation_times, repeat=True)
+    if is_mp4:
+        ani.save("./result/mpdm_result_birdeye.mp4", writer = 'ffmpeg')
+    else:
+        ani.save("./result/mpdm_result_birdeye.gif", writer = 'pillow')
 
 plt.show()

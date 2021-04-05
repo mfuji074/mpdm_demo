@@ -81,15 +81,15 @@ class Car:
 
 
     def exec_policy(self,dt):
-        time_for_lane_changing_sec = 10
-        car_distance_threshold = 16
+        time_for_lane_changing_sec = 5
+        car_distance_threshold = 15
 
         # policy
         if self.Policy == Policy.KeepLane:
             self.vel_lane = 0.0
 
             if self.CarType == CarType.Other:
-                if self.vel < self.vel_nominal[int(self.lane)]:
+                if self.vel < self.vel_nominal[round(self.lane)]:
                     self.SubPolicy = SubPolicy.Accel
                 else:
                     self.SubPolicy = SubPolicy.Decel
@@ -109,7 +109,7 @@ class Car:
                 else:
                     self.vel_lane = -1/time_for_lane_changing_sec
 
-            elif self.count_lane_changing == int(time_for_lane_changing_sec/dt):
+            elif self.count_lane_changing == round(time_for_lane_changing_sec/dt):
                 self.is_lane_changing = False
                 self.count_lane_changing = 0
                 self.vel_lane = 0.0

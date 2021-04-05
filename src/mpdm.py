@@ -28,7 +28,7 @@ class MpdmNode:
         if car_ego.is_lane_changing:
             score += k2*(car_ego.vel_nominal[0] - car_ego.vel)**2
         else:
-            score += k2*(car_ego.vel_nominal[int(car_ego.lane)] - car_ego.vel)**2
+            score += k2*(car_ego.vel_nominal[round(car_ego.lane)] - car_ego.vel)**2
 
         # 障害物（他車）に近いとコスト増
         k3 = self.coef[2]
@@ -55,7 +55,7 @@ class MpdmNode:
         k4 = self.coef[6]
         for i, car in enumerate(Cars):
             if i > 0:
-                score += k4*(car.vel_nominal[int(car.lane)] - car.vel)**2
+                score += k4*(car.vel_nominal[round(car.lane)] - car.vel)**2
 
         return score
 
