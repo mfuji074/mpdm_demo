@@ -21,7 +21,13 @@ class MpdmNode:
 
         # 最終位置が大きいほどコスト減
         k1 = self.coef[0]
-        score += k1*car_ego.pos_his[0]/(car_ego.pos_his[-1] - car_ego.pos_his[0])
+        if car_ego.MyLoopPass is None:
+            score += k1*car_ego.pos_his[0]/(car_ego.pos_his[-1] - car_ego.pos_his[0])
+        else:
+            dst_traveled = car_ego.pos_his[-1] - car_ego.pos_his[0]
+            if dst_traveled < 0:
+                dst_traveled += car_ego.MyLoopPass.calc_path_length(1)
+            score += k1*car_ego.pos_his[0]/dst_traveled
 
         # ノミナル速度から離れているとコスト増
         k2 = self.coef[1]

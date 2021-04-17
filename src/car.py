@@ -1,6 +1,8 @@
 import numpy as np
 from enum import Enum, auto
 
+#from path import LoopPass
+
 class Policy(Enum):
     KeepLane = auto()
     ChangeLane = auto()
@@ -16,7 +18,7 @@ class CarType(Enum):
 
 class Car:
 
-    def __init__(self, lane0, pos0, vel0, acc0, vel_nominal, CarType = CarType.Ego, Policy_ini = Policy.KeepLane, SubPolicy_ini = SubPolicy.KeepVel):
+    def __init__(self, lane0, pos0, vel0, acc0, vel_nominal, CarType = CarType.Ego, MyLoopPass = None, Policy_ini = Policy.KeepLane, SubPolicy_ini = SubPolicy.KeepVel, ):
         # state
         self.lane = lane0
         self.pos = pos0
@@ -26,6 +28,7 @@ class Car:
         self.vel_lane = 0.0 # レーン方向速度
 
         self.CarType = CarType
+        self.MyLoopPass = MyLoopPass
 
         # policy
         self.Policy = Policy_ini
@@ -64,6 +67,15 @@ class Car:
 
             # 他車との距離
             dst = Car_other.pos - self.pos
+            '''
+            if self.MyLoopPass is not None:
+                path_length = self.MyLoopPass.calc_path_length(self.lane)
+                if abs(dst) > path_length/2:
+                    if dst < 0:
+                        dst = dst + path_length
+                    else:
+                        dst = dst - path_length
+            '''
             self.dst_m.append(dst)
 
             # 他車との相対速度
@@ -136,6 +148,11 @@ class Car:
         self.vel += self.acc*dt/kmh2ms
         self.lane += self.vel_lane*dt
 
+        if self.MyLoopPass is not None:
+            path_length = self.MyLoopPass.calc_path_length(self.lane)
+            if self.pos > path_length:
+                self.pos = self.pos-path_length
+
     def log_state(self):
         self.lane_his.append(self.lane)
         self.pos_his.append(self.pos)
@@ -149,5 +166,3 @@ class Car:
         self.vel_his = []
         self.acc_his = []
         self.dst_min_his = []
-
-
