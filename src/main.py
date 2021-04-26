@@ -11,35 +11,35 @@ from mpdm import MPDM
 from path import LoopPass
 
 # simulation period
-tf = 120 #240#1200 # sec
+tf = 300 #240#1200 # sec
 dt = 0.1 #0.5 # sec
 tspan = np.arange(dt, tf, dt)
 
 # path
 length_lane1 = 200
-length_straight_line = 60
-MyLoopPass = LoopPass(length_lane1, length_straight_line) # or None
+length_straight_line = 90
+MyLoopPass = None #LoopPass(length_lane1, length_straight_line) # or None
 
 # car
-car0 = Car(0, 90.0,  20.0, 0.0, [30.0, 35.0], CarType.Ego, MyLoopPass) # lane, pos [m], vel [km/h], acc [m/s^2], vel_nominal[km/h] (各レーンでの定常速度)
-car1 = Car(0, 100.0, 10.0, 0.0, [10.0, 32.0], CarType.Other, MyLoopPass)
-car2 = Car(1, 30.0,  29.0, 0.0, [29.0, 32.0], CarType.Other, MyLoopPass)
-car3 = Car(0, 110.0,  27.0, 0.0, [28.0, 32.0], CarType.Other, MyLoopPass)
-car4 = Car(1, 0.0,  29.0, 0.0, [29.0, 32.0], CarType.Other, MyLoopPass)
+car0 = Car(0, 10.0,  20.0, 0.0, [20.0, 25.0], CarType.Ego, MyLoopPass) # lane, pos [m], vel [km/h], acc [m/s^2], vel_nominal[km/h] (各レーンでの定常速度)
+car1 = Car(0, 30.0, 15.0, 0.0, [15.0, 32.0], CarType.Other, MyLoopPass)
+car2 = Car(1, 75.0,  20.0, 0.0, [29.0, 20.0], CarType.Other, MyLoopPass)
+car3 = Car(0, 105.0,  15.0, 0.0, [15.0, 32.0], CarType.Other, MyLoopPass)
+car4 = Car(1, 0.0,  20.0, 0.0, [29.0, 20.0], CarType.Other, MyLoopPass)
 
-#cars = [car0, car1, car2, car3, car4]
-cars = [car0, car1]
+cars = [car0, car1, car2, car3, car4]
+#cars = [car0, car1, car4]
 
 # MPDM
 dt_mpdm = dt # timestep, sec
 th = 5 #10 # horizon, sec
 tree_length = 1
 #th = th/tree_length
-interval_mpdm = 5 #6 # mpdm execution interval
+interval_mpdm = 6 #6 # mpdm execution interval
 is_animation = True
-is_mp4 = False
+is_mp4 = True
 
-cost_coef = [1, 1, 1, 1, 0.8, 1, 1] # 距離、速度、車間距離、ポリシー維持バイアス、車線バイアス、車線変更コスト、他車の挙動
+cost_coef = [1, 1, 1, 1, 0.5, 1, 1] # 距離、速度、車間距離、ポリシー維持バイアス、車線バイアス、車線変更コスト、他車の挙動
 mpdm_car0 = MPDM(dt_mpdm, th, tree_length, cost_coef)
 
 if is_animation:
@@ -125,8 +125,8 @@ def plot_cars(index):
         ax.axvline(x=1.5, color="black", alpha=0.7)
     else:
         x0,y0,theta0 = MyLoopPass.conv_pos_lane_in_path(best_states_list[index][0].pos_his[0], best_states_list[index][0].lane_his[0])
-        ax.set_xlim(x0-MyLoopPass.r1, x0+MyLoopPass.r1)
-        ax.set_ylim(y0-MyLoopPass.r1*2, y0+MyLoopPass.r1*2)
+        ax.set_xlim(x0-20, x0+20)
+        ax.set_ylim(y0-20, y0+20)
         ax.plot(MyLoopPass.point_lane1[:,0], MyLoopPass.point_lane1[:,1], color="black")
         ax.plot(MyLoopPass.point_lane2[:,0], MyLoopPass.point_lane2[:,1], color="black")
 
@@ -154,7 +154,12 @@ def plot_cars(index):
 
             car_width = 1.77
             car_height = 4.0
-            x0,y0,theta0 = MyLoopPass.conv_pos_lane_in_path(car.pos_his[0], car.lane_his[0])
+            x0_tmp,y0_tmp,theta0 = MyLoopPass.conv_pos_lane_in_path(car.pos_his[0], car.lane_his[0])
+            r0 = np.sqrt(x0_tmp**2 + y0_tmp**2)
+            x0 = x0_tmp
+            y0 = y0_tmp
+            #x0 = (r0 - car_width/2) * x0_tmp/r0 + car_height/2*y0_tmp/r0
+            #y0 = (r0 - car_width/2) * y0_tmp/r0 - car_height/2*x0_tmp/r0
 
         # 車の位置
         r = patches.Rectangle(xy=(x0, y0), width=car_width, height=car_height, angle=theta0*180/np.pi, ec=color, fc=color)
@@ -191,6 +196,7 @@ def plot_cars_birdeye(index):
     else:
         ax.set_xlim(-MyLoopPass.r1*2-10, 10)
         ax.set_ylim(-MyLoopPass.r1*2, MyLoopPass.length_straight_line+MyLoopPass.r1*2)
+        ax.set_aspect('equal')
         ax.plot(MyLoopPass.point_lane1[:,0], MyLoopPass.point_lane1[:,1], color="black")
         ax.plot(MyLoopPass.point_lane2[:,0], MyLoopPass.point_lane2[:,1], color="black")
 
@@ -216,7 +222,7 @@ def plot_cars_birdeye(index):
         # 車の速度
         bias_x = 0.07
         str_vel = "{:.2f}".format(car.vel_his[0])
-        ax.text( x[0]+bias_x, y[0], f"Velocity = {str_vel} km/h")
+        ax.text( x[0]+bias_x, y[0], f"{str_vel} km/h")
         # 自車のポリシー
         if i == 0:
             bias_y = best_states_list[-1][0].pos_his[-1]/50
@@ -234,7 +240,7 @@ if is_animation:
     if MyLoopPass is None:
         fig = plt.figure(figsize=(4,30))
     else:
-        fig = plt.figure(figsize=(8,16))
+        fig = plt.figure(figsize=(6,6))
     ax = fig.add_subplot(111)
     ani = animation.FuncAnimation(fig, plot_cars, frames=len(best_states_list), interval=dt*interval_mpdm*1000/animation_times, repeat=True)
 
@@ -246,7 +252,9 @@ if is_animation:
     if MyLoopPass is None:
         fig = plt.figure(figsize=(4,30))
     else:
-        fig = plt.figure(figsize=(8,16))
+        x = MyLoopPass.r1*2
+        y = MyLoopPass.length_straight_line
+        fig = plt.figure(figsize=(12,12))
     ax = fig.add_subplot(111)
     ani = animation.FuncAnimation(fig, plot_cars_birdeye, frames=len(best_states_list), interval=dt*interval_mpdm*1000/animation_times, repeat=True)
     if is_mp4:

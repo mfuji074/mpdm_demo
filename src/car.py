@@ -67,7 +67,6 @@ class Car:
 
             # 他車との距離
             dst = Car_other.pos - self.pos
-            '''
             if self.MyLoopPass is not None:
                 path_length = self.MyLoopPass.calc_path_length(self.lane)
                 if abs(dst) > path_length/2:
@@ -75,7 +74,6 @@ class Car:
                         dst = dst + path_length
                     else:
                         dst = dst - path_length
-            '''
             self.dst_m.append(dst)
 
             # 他車との相対速度
